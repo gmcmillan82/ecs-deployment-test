@@ -25,7 +25,6 @@ jobs:
         uses: sunnysid3up/python-linter@master
         with:
           source: "./hello"
-          pylint-args: ['--fix']
 
   test:
     needs: lint
