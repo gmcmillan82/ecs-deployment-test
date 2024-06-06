@@ -25,6 +25,7 @@ jobs:
         uses: sunnysid3up/python-linter@master
         with:
           source: "./hello"
+          pylint-options: "--rcfile=.pylintrc"
 
   test:
     needs: lint
