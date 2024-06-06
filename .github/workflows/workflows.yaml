@@ -53,15 +53,13 @@ jobs:
     needs: test
     steps:
       - name: Get Git SHA and set environment variable
-        run: |
-          git rev-parse --short HEAD > image_tag
-          echo "::set-env name=IMAGE_TAG::$(cat image_tag)"
+        run: echo "COMMIT_ID=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - uses: actions/checkout@v4
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
           push: false
-          tags: flask-app:${{ env.IMAGE_TAG }}
+          tags: flask-app:${{ env.COMMIT_ID}}
           file: Dockerfile
 
