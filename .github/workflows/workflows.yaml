@@ -25,7 +25,7 @@ jobs:
         uses: sunnysid3up/python-linter@master
         with:
           source: "./hello"
-          mypy-options: "--ignore-missing-imports --show-error-codes"
+          mypy-options: "--ignore-missing-imports --show-error-codes --fix"
 
   test:
     needs: lint
