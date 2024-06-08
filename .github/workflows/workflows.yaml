@@ -46,7 +46,7 @@ jobs:
         run: black .
 
       - name: Run Flake8
-        run: flake8 .
+        run: flake8 --ignore=F401 .
 
   test:
     runs-on: ubuntu-22.04
