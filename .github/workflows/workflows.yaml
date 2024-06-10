@@ -106,5 +106,5 @@ jobs:
           push: true
           tags: 680739295215.dkr.ecr.eu-west-1.amazonaws.com/demo-app:${{ env.COMMIT_ID}}
           file: Dockerfile
-
+          platforms: ["linux/amd64"]
 
