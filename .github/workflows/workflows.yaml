@@ -1,4 +1,4 @@
-name: Flask App Pipeline
+name: Demo App Pipeline
 
 on:
   push:
@@ -67,10 +67,29 @@ jobs:
       - name: Run tests
         run: pytest
 
-  build-image:
+  build-and-push:
     runs-on: ubuntu-22.04
     needs: test
+    env:
+      AWS_REGION: eu-west-1
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Configure AWS credentials from OIDC
+        id: configure-aws-credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        run: |
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin 680739295215.dkr.ecr.eu-west-1.amazonaws.com
+
       - name: Get Git SHA and set environment variable
         run: echo "COMMIT_ID=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
@@ -81,4 +100,11 @@ jobs:
           push: false
           tags: flask-app:${{ env.COMMIT_ID}}
           file: Dockerfile
+
+      - name: Push docker image to ECR
+        run: |
+          IMAGE_TAG=${{ env.GIT_SHA }}
+          REPOSITORY_URI=680739295215.dkr.ecr.eu-west-1.amazonaws.com/demo-app
+          docker push $REPOSITORY_URI:$IMAGE_TAG
+          docker push $REPOSITORY_URI:latest
 
