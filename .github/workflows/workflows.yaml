@@ -78,6 +78,7 @@ jobs:
 
     env:
       AWS_REGION: eu-west-1
+      AWS_ROLE_ARN: arn:aws:iam::680739295215:role/gha-ci-role
 
     steps:
       - name: Checkout code
@@ -90,7 +91,7 @@ jobs:
         id: configure-aws-credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: ${{ env.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR
