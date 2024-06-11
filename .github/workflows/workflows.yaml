@@ -1,15 +1,15 @@
 name: Demo App Pipeline
 
-# on:
-#   push:
-#     branches: [ master ]
-#   pull_request:
+on:
+  push:
+    branches: [ master ]
+  pull_request:
 
 # Only run when pull request merged, direct commits to master are disabled
-on:
-  pull_request:
-    branches: [master]
-    events: [closed]
+# on:
+#   pull_request:
+#     branches: [master]
+#     events: [closed]
 
 jobs:
   lint:
