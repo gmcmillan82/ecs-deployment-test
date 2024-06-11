@@ -144,13 +144,10 @@ jobs:
           provenance: false
 
       # This step is needed as build-push-action requires ecr:BatchGetImage permission which I do not have
-      - name: Push image
+      - name: Push images
         run: |
-          docker push ${{ steps.build-image.outputs.image }}
-      # This step is needed as build-push-action requires ecr:BatchGetImage permission which I do not have
-      - name: Push image with production tag
-        run: |
-          docker push ${{ steps.build-image-production.outputs.image }}
+          docker push ${{ steps.build-image.outputs.imageid }}
+          docker push ${{ steps.build-image-production.outputs.imageid }}
 
       # Create new taskdef with new image tag as the deployment image
       - name: Render ECS task definition
@@ -158,7 +155,7 @@ jobs:
         with:
           task-definition: task-definition.json
           container-name: demo-app
-          image: ${{ steps.build-image.outputs.image }} # Get image tag from docker build step
+          image: ${{ steps.build-image.outputs.imageid }} # Get image tag from docker build step
 
       # Atttempt to deploy new tasks using new task definition
       - name: Deploy ECS task definition
