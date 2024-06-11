@@ -90,9 +90,6 @@ jobs:
       contents: read
     env:
       AWS_REGION: eu-west-1
-    outputs:
-      IMAGE_ID: ${{ steps.build-image.outputs.image.digest }}
-      IMAGE_ID_PROD: ${{ steps.build-image-production.outputs.image.digest }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -122,35 +119,18 @@ jobs:
         run: |
           aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
-      # Build docker image using the git SHA tag
+      # Build docker image using the git SHA tag and production tag (used by Terraform)
       - name: Build Docker image
         id: build-image
         uses: docker/build-push-action@v5
         with:
-          push: false
-          pull: false
-          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/demo-app:${{ env.COMMIT_ID }}
+          push: true 
+          tags: |
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/demo-app:${{ env.COMMIT_ID }}
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/demo-app:production
           file: Dockerfile
           platforms: linux/amd64
           provenance: false
-
-      # Push image with production tag (used by Terraform)
-      - name: Build Docker image
-        id: build-image-production
-        uses: docker/build-push-action@v5
-        with:
-          push: false
-          pull: false
-          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/demo-app:production
-          file: Dockerfile
-          platforms: linux/amd64
-          provenance: false
-
-      # This step is needed as build-push-action requires ecr:BatchGetImage permission which I do not have
-      - name: Push images
-        run: |
-          docker push $IMAGE_ID
-          docker push $IMAGE_ID_PROD 
 
       # Create new taskdef with new image tag as the deployment image
       - name: Render ECS task definition
