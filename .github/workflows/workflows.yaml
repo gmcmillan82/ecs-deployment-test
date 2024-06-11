@@ -1,9 +1,15 @@
 name: Demo App Pipeline
 
+# on:
+#   push:
+#     branches: [ master ]
+#   pull_request:
+
+# Only run when pull request merged, direct commits to master are disabled
 on:
-  push:
-    branches: [ master ]
   pull_request:
+    branches: [master]
+    events: [closed]
 
 jobs:
   lint:
@@ -25,20 +31,25 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+      # Install dependencies for testing, linting steps
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install .
           pip install flake8 black
 
+      # Attempt to fix linting issues prior to running flake8
       - name: Run Black to auto-format code
         run: black .
 
+      # Ignore current code issue, no autofixing
       - name: Run Flake8
         run: flake8 --ignore=F401 .
 
   test:
     runs-on: ubuntu-22.04
+    # Only run if linting job passes
+    needs: lint
     steps:
       - uses: actions/checkout@v4
 
@@ -55,12 +66,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+      # Install pytest for next step
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install flask
           pip install pytest
 
+      # Set pythonpath so gha knows the project root
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=." >> $GITHUB_ENV
 
@@ -69,61 +82,68 @@ jobs:
 
   build-and-push:
     runs-on: ubuntu-22.04
-
+    # Only run if test job completes
     needs: test
-
     permissions:
       id-token: write
       contents: read
-
     env:
       AWS_REGION: eu-west-1
-
+      AWS_ACCOUNT_ID: 303981612052 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials from OIDC
-        id: configure-aws-credentials
+      - name: Authenticate to AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-1
+          role-to-assume: arn:aws:iam::${{ AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole
+          role-session-name: GithubActionsSession
           aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
+      # Authenticate using OIDC
+      # - name: Configure AWS credentials from OIDC
+      #   id: configure-aws-credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+      #     aws-region: ${{ env.AWS_REGION }}
+
+      # Get the short SHA of the commit to use for image tagging
       - name: Get Git SHA and set environment variable
         run: echo "COMMIT_ID=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Login to ECR
         run: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin 680739295215.dkr.ecr.eu-west-1.amazonaws.com
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
 
-      - name: Determine image tag
-        id: determine-tag
-        run: |
-          if [[ $GITHUB_REF == refs/heads/master ]]; then
-            echo "IMAGE_TAG=production"
-          else
-            echo "IMAGE_TAG=${{ env.COMMIT_ID }}"
-          fi
-          echo "::set-output name=image_tag::$IMAGE_TAG"
-
-      - name: Push production image
-        if: steps.determine-tag.outputs.image_tag == 'production'
-        uses: docker/build-push-action@v5
-        with:
-          push: true
-          tags: 680739295215.dkr.ecr.eu-west-1.amazonaws.com/demo-app:production
-          file: Dockerfile
-          platforms: linux/amd64
-          provenance: false
-
-
+      # Build docker image using the git SHA tag
       - name: Build Docker image
+        id: build-image
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: 680739295215.dkr.ecr.eu-west-1.amazonaws.com/demo-app:${{ env.COMMIT_ID }}
+          tags: ${{ AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/demo-app:${{ env.COMMIT_ID }}
           file: Dockerfile
           platforms: linux/amd64
           provenance: false
 
+      # Create new taskdef with new image tag as the deployment image
+      # - name: Render ECS task definition
+      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
+      #   with:
+      #     task-definition: task-definition.json
+      #     container-name: demo-app
+      #     image: ${{ steps.build-image.outputs.image }} # Get image tag from docker build step
+      #
+      # # Atttempt to deploy new tasks using new task definition
+      # - name: Deploy ECS task definition
+      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      #   with:
+      #     task-definition: ${{ steps.task-def.outputs.task-definition }}
+      #     service: demo-app
+      #     cluster: demo-cluster
+      #     wait-for-service-stability: true
