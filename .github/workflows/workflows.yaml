@@ -131,7 +131,7 @@ jobs:
           platforms: linux/amd64
           provenance: false
 
-      # Push image with production tag
+      # Push image with production tag (used by Terraform)
       - name: Build Docker image
         id: build-image-production
         uses: docker/build-push-action@v5
@@ -144,9 +144,12 @@ jobs:
           provenance: false
 
       # This step is needed as build-push-action requires ecr:BatchGetImage permission which I do not have
-      - name: Push images
+      - name: Push image
         run: |
           docker push ${{ steps.build-image.outputs.image }}
+      # This step is needed as build-push-action requires ecr:BatchGetImage permission which I do not have
+      - name: Push image with production tag
+        run: |
           docker push ${{ steps.build-image-production.outputs.image }}
 
       # Create new taskdef with new image tag as the deployment image
