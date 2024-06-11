@@ -132,7 +132,7 @@ jobs:
 
       # Push image with production tag
       - name: Build Docker image
-        id: build-image
+        id: build-image-production
         uses: docker/build-push-action@v5
         with:
           push: true
