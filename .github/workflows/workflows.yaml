@@ -100,7 +100,6 @@ jobs:
           aws-region: eu-west-1
           role-to-assume: arn:aws:iam::${{ AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole
           role-session-name: GithubActionsSession
-          aws-region: ${{ env.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
