@@ -90,6 +90,7 @@ jobs:
       contents: read
     env:
       AWS_REGION: eu-west-1
+      AWS_ACCOUNT_ID: 303981612052
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -117,7 +118,7 @@ jobs:
 
       - name: Login to ECR
         run: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
       # Build docker image using the git SHA tag and production tag (used by Terraform)
       - name: Build Docker image
@@ -126,8 +127,8 @@ jobs:
         with:
           push: true 
           tags: |
-            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/demo-app:${{ env.COMMIT_ID }}
-            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/demo-app:production
+            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/demo-app:${{ env.COMMIT_ID }}
+            ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/demo-app:production
           file: Dockerfile
           platforms: linux/amd64
           provenance: false
