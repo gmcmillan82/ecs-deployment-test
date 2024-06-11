@@ -90,7 +90,6 @@ jobs:
     env:
       AWS_REGION: eu-west-1
       AWS_ACCOUNT_ID: 303981612052
-      ECR_URI: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -118,7 +117,7 @@ jobs:
 
       - name: Login to ECR
         run: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_URI }}
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
 
       # Build docker image using the git SHA tag
       - name: Build Docker image
