@@ -125,7 +125,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/demo-app:${{ env.COMMIT_ID }}
+          pull: false
+          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/demo-app:${{ env.COMMIT_ID }}
           file: Dockerfile
           platforms: linux/amd64
           provenance: false
@@ -136,7 +137,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/demo-app:production
+          pull: false
+          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/demo-app:production
           file: Dockerfile
           platforms: linux/amd64
           provenance: false
