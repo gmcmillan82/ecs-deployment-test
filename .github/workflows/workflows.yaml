@@ -133,18 +133,18 @@ jobs:
           provenance: false
 
       # Create new taskdef with new image tag as the deployment image
-      - name: Render ECS task definition
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: demo-app
-          image: ${{ steps.build-image.outputs.imageid }} # Get image tag from docker build step
-
-      # Atttempt to deploy new tasks using new task definition
-      - name: Deploy ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: demo-app
-          cluster: demo-cluster
-          wait-for-service-stability: true
+      # - name: Render ECS task definition
+      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
+      #   with:
+      #     task-definition: task-definition.json
+      #     container-name: demo-app
+      #     image: ${{ steps.build-image.outputs.imageid }} # Get image tag from docker build step
+      #
+      # # Atttempt to deploy new tasks using new task definition
+      # - name: Deploy ECS task definition
+      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      #   with:
+      #     task-definition: ${{ steps.task-def.outputs.task-definition }}
+      #     service: demo-app
+      #     cluster: demo-cluster
+      #     wait-for-service-stability: true
