@@ -90,6 +90,7 @@ jobs:
     env:
       AWS_REGION: eu-west-1
       AWS_ACCOUNT_ID: 303981612052
+      ECR_URI: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -98,7 +99,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: eu-west-1
-          role-to-assume: arn:aws:iam::${{ AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/ecsTaskExecutionRole
           role-session-name: GithubActionsSession
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -117,7 +118,7 @@ jobs:
 
       - name: Login to ECR
         run: |
-          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_URI }}
 
       # Build docker image using the git SHA tag
       - name: Build Docker image
@@ -125,7 +126,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ${{ AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/demo-app:${{ env.COMMIT_ID }}
+          tags: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.eu-west-1.amazonaws.com/demo-app:${{ env.COMMIT_ID }}
           file: Dockerfile
           platforms: linux/amd64
           provenance: false
